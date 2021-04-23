@@ -1,12 +1,12 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import us.kirchmeier.capsule.spec.ReallyExecutableSpec
-import us.kirchmeier.capsule.task.FatCapsule
 
 plugins {
     kotlin("jvm") version Versions.KOTLIN
     kotlin("kapt") version Versions.KOTLIN
     application
-    id("it.gianluz.capsule") version Versions.CAPSULE_PLUGIN
+    id("com.github.johnrengelman.shadow") version Versions.SHADOW_PLUGIN
+
 }
 
 group = "org.jraf"
@@ -18,9 +18,7 @@ repositories {
 }
 
 dependencies {
-    // Note: using compile instead of implementation because for some unknown reason, implementation
-    // doesn't play well when generating the fatCapsule.
-    compile(kotlin("stdlib-jdk8", Versions.KOTLIN))
+    implementation(kotlin("stdlib-jdk8", Versions.KOTLIN))
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", Versions.COROUTINES)
 
     // Retrofit / Moshi
@@ -29,7 +27,7 @@ dependencies {
     implementation("com.squareup.moshi", "moshi", Versions.MOSHI)
     kapt("com.squareup.moshi", "moshi-kotlin-codegen", Versions.MOSHI)
 
-    compile("org.jetbrains.kotlinx", "kotlinx-cli", Versions.KOTLINX_CLI)
+    implementation("org.jetbrains.kotlinx", "kotlinx-cli", Versions.KOTLINX_CLI)
 
     testImplementation(kotlin("test-junit"))
 }
@@ -42,13 +40,35 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-tasks.create<FatCapsule>("fatCapsule") {
-    applicationClass("MainKt")
-    reallyExecutable(closureOf<ReallyExecutableSpec> { regular() })
-}
-
 application {
     mainClassName = "MainKt"
 }
 
-// run "./gradlew fatCapsule" to build the "really executable fat jar"
+tasks {
+    named<ShadowJar>("shadowJar") {
+        minimize()
+    }
+}
+
+// Implements https://github.com/brianm/really-executable-jars-maven-plugin maven plugin behaviour.
+// To check details how it works, see http://skife.org/java/unix/2011/06/20/really_executable_jars.html.
+tasks.register<DefaultTask>("shadowJarExecutable") {
+    description = "Creates a self-executable file, that runs the generated shadow jar"
+    group = "Distribution"
+
+    inputs.files(tasks.named("shadowJar"))
+    val origFile = inputs.files.singleFile
+    outputs.files(File(origFile.parentFile, origFile.nameWithoutExtension + "-executable"))
+
+    doLast {
+        val execFile: File = outputs.files.files.first()
+        val out = execFile.outputStream()
+        out.write("#!/bin/sh\n\nexec java -jar \"\$0\" \"\$@\"\n\n".toByteArray())
+        out.write(inputs.files.singleFile.readBytes())
+        out.flush()
+        out.close()
+        execFile.setExecutable(true, false)
+    }
+}
+
+// run "./gradlew shadowJarExecutable" to build the "really executable jar"
