@@ -50,3 +50,5 @@ tasks.create<FatCapsule>("fatCapsule") {
 application {
     mainClassName = "MainKt"
 }
+
+// run "./gradlew fatCapsule" to build the "really executable fat jar"

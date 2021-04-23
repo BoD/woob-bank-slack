@@ -44,16 +44,16 @@ class Arguments(av: Array<String>) {
     val slackChannel: String by parser.option(ArgType.String, fullName = "slack-channel", shortName = "c", description = "Slack channel").required()
 
     private val accountsStr: List<String> by parser.argument(ArgType.String, "accounts", description = "Accounts").vararg()
-    val accounts: List<Account> get() = accountsStr.map(String::toAccount)
+    val accountArguments: List<AccountArgument> get() = accountsStr.map(String::toAccountArgument)
 
     init {
         parser.parse(av)
     }
 }
 
-data class Account(val name: String, val id: String)
+data class AccountArgument(val name: String, val id: String)
 
-private fun String.toAccount(): Account {
+private fun String.toAccountArgument(): AccountArgument {
     val (name, id) = split(':')
-    return Account(name, id)
+    return AccountArgument(name, id)
 }

@@ -1,4 +1,4 @@
-import org.jraf.woobbankslack.arguments.Account
+import org.jraf.woobbankslack.arguments.AccountArgument
 import org.jraf.woobbankslack.arguments.Arguments
 import org.jraf.woobbankslack.slack.AuthTokenProvider
 import org.jraf.woobbankslack.slack.SlackClient
@@ -20,25 +20,25 @@ suspend fun main(args: Array<String>) {
         override fun getAuthToken() = arguments.slackAuthToken
     })
 
-    val allAccounts = woobBankExecutor.getAccounts()
-    Log.d("allAccounts=$allAccounts")
-    val accountsByBank = allAccounts.groupBy { it.id.getBankId() }
-
-    val lastTransactions = mutableMapOf<Account, List<WoobBankTransaction>>()
+    val lastTransactions = mutableMapOf<AccountArgument, List<WoobBankTransaction>>()
     while (true) {
         try {
-            Log.d("accounts=${arguments.accounts}")
-            for (account in arguments.accounts) {
-                val transactions = woobBankExecutor.getTransactions(account.id)
+            val allAccounts: List<WoobBankAccount> = woobBankExecutor.getAccounts()
+            Log.d("allAccounts=$allAccounts")
+            val accountsByBank = allAccounts.groupBy { it.id.getBankId() }
+
+            Log.d("accountArguments=${arguments.accountArguments}")
+            for (accountArgument in arguments.accountArguments) {
+                val transactions = woobBankExecutor.getTransactions(accountArgument.id)
                 Log.d(transactions)
                 if (transactions.isEmpty()) {
                     Log.d("Empty list, probably a bug: ignore")
                     continue
                 }
-                val newTransactions = transactions - (lastTransactions[account] ?: emptyList())
+                val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList())
                 for (transaction in newTransactions) {
                     val text = """
-                        _${account.name}_
+                        _${accountArgument.name}_
                         ${if (transaction.amount.startsWith('-')) "🔻" else ":small_green_triangle:"} *${transaction.amount}* - ${transaction.raw}
                     """.trimIndent()
                     Log.d(text)
@@ -48,12 +48,12 @@ suspend fun main(args: Array<String>) {
                     // Sleep a bit between posts
                     TimeUnit.SECONDS.sleep(1)
                 }
-                lastTransactions[account] = transactions
+                lastTransactions[accountArgument] = transactions
 
                 // Show balance if there was at least one transaction
                 if (newTransactions.isNotEmpty()) {
                     val text = """
-                        :sum: _${account.name}_ balance: *${accountsByBank[account.id.getBankId()]!!.sumByBalance()}* 
+                        :sum: _${accountArgument.name}_ balance: *${accountsByBank[accountArgument.id.getBankId()]!!.sumByBalance()}* 
                     """.trimIndent()
                     Log.d("text=$text")
                     val postResult = slackClient.postMessage(text = text, channel = arguments.slackChannel)
