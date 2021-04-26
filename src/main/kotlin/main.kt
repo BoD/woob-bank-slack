@@ -23,9 +23,7 @@ suspend fun main(args: Array<String>) {
     val lastTransactions = mutableMapOf<AccountArgument, List<WoobBankTransaction>>()
     while (true) {
         try {
-            val allAccounts: List<WoobBankAccount> = woobBankExecutor.getAccounts()
-            Log.d("allAccounts=$allAccounts")
-            val accountsByBank = allAccounts.groupBy { it.id.getBankId() }
+            var allAccounts: List<WoobBankAccount> = emptyList()
 
             Log.d("accountArguments=${arguments.accountArguments}")
             for (accountArgument in arguments.accountArguments) {
@@ -52,6 +50,12 @@ suspend fun main(args: Array<String>) {
 
                 // Show balance if there was at least one transaction
                 if (newTransactions.isNotEmpty()) {
+                    if (allAccounts.isEmpty()) {
+                        allAccounts = woobBankExecutor.getAccounts()
+                        Log.d("allAccounts=$allAccounts")
+                    }
+                    val accountsByBank = allAccounts.groupBy { it.id.getBankId() }
+
                     val text = """
                         :sum: _${accountArgument.name}_ balance: *${accountsByBank[accountArgument.id.getBankId()]!!.sumByBalance()}* 
                     """.trimIndent()

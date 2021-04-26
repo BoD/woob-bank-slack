@@ -1,3 +1,4 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -6,7 +7,7 @@ plugins {
     kotlin("kapt") version Versions.KOTLIN
     application
     id("com.github.johnrengelman.shadow") version Versions.SHADOW_PLUGIN
-
+    id("com.github.ben-manes.versions") version Versions.BEN_MANES_VERSIONS_PLUGIN
 }
 
 group = "org.jraf"
@@ -48,6 +49,29 @@ tasks {
     named<ShadowJar>("shadowJar") {
         minimize()
     }
+
+    // Configuration for gradle-versions-plugin
+    // Run `./gradlew dependencyUpdates` to see latest versions of dependencies
+    withType<DependencyUpdatesTask> {
+        resolutionStrategy {
+            componentSelection {
+                all {
+                    if (
+                        setOf("alpha", "beta", "rc", "preview", "eap", "m1", "m2").any {
+                            candidate.version.contains(it, true)
+                        }
+                    ) {
+                        reject("Non stable")
+                    }
+                }
+            }
+        }
+    }
+
+    wrapper {
+        distributionType = Wrapper.DistributionType.ALL
+        gradleVersion = Versions.GRADLE
+    }
 }
 
 // Implements https://github.com/brianm/really-executable-jars-maven-plugin maven plugin behaviour.
@@ -71,4 +95,4 @@ tasks.register<DefaultTask>("shadowJarExecutable") {
     }
 }
 
-// run "./gradlew shadowJarExecutable" to build the "really executable jar"
+// Run `./gradlew shadowJarExecutable` to build the "really executable jar"
