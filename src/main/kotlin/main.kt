@@ -21,6 +21,7 @@ suspend fun main(args: Array<String>) {
     })
 
     val lastTransactions = mutableMapOf<AccountArgument, List<WoobBankTransaction>>()
+    val failCount = mutableMapOf<AccountArgument, Int>()
     while (true) {
         try {
             var allAccounts: List<WoobBankAccount> = emptyList()
@@ -30,7 +31,16 @@ suspend fun main(args: Array<String>) {
                 val transactions = woobBankExecutor.getTransactions(accountArgument.id)
                 Log.d(transactions)
                 if (transactions.isEmpty()) {
-                    Log.d("Empty list, probably a bug: ignore")
+                    Log.d("Empty list, probably credential issues")
+                    val failCountForAccount = failCount.getOrPut(accountArgument) { 0 } + 1
+                    failCount[accountArgument] = failCountForAccount
+                    if (failCountForAccount >= 8) {
+                        val postResult = slackClient.postMessage(text = """
+                            _${accountArgument.name}_
+                            :warning: Could not retrieve transactions for $failCountForAccount times. Check credentials!
+                        """.trimIndent(), channel = arguments.slackChannel)
+                        Log.d("postResult=$postResult")
+                    }
                     continue
                 }
                 val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList())
