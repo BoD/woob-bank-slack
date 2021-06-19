@@ -28,8 +28,10 @@ suspend fun main(args: Array<String>) {
 
             Log.d("accountArguments=${arguments.accountArguments}")
             for (accountArgument in arguments.accountArguments) {
+                Log.d("accountArgument=$accountArgument")
                 val transactions = woobBankExecutor.getTransactions(accountArgument.id)
-                Log.d(transactions)
+                Log.d("transactions.size=${transactions.size}")
+                Log.d("transactions=$transactions")
                 if (transactions.isEmpty()) {
                     Log.d("Empty list, probably credential issues")
                     val failCountForAccount = failCount.getOrPut(accountArgument) { 0 } + 1
@@ -44,6 +46,8 @@ suspend fun main(args: Array<String>) {
                     continue
                 }
                 val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList())
+                Log.d("newTransactions.size=${newTransactions.size}")
+                Log.d("newTransactions=$newTransactions")
                 for (transaction in newTransactions) {
                     val text = """
                         _${accountArgument.name}_
@@ -78,12 +82,12 @@ suspend fun main(args: Array<String>) {
             Log.w(t, "Caught exception in main loop")
         }
 
-        Log.d("Sleep 3 hours")
-        TimeUnit.HOURS.sleep(3)
+        Log.d("Sleep 4 hours")
+        TimeUnit.HOURS.sleep(4)
     }
 }
 
 private fun String.getBankId() = split('@')[1]
 
 
-private fun Iterable<WoobBankAccount>.sumByBalance(): Double = sumBy { (it.balance.toDouble() * 100).toInt() } / 100.0
+private fun Iterable<WoobBankAccount>.sumByBalance(): Double = sumOf { (it.balance.toDouble() * 100).toInt() } / 100.0

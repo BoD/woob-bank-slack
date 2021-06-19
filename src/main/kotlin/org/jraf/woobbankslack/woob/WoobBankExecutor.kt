@@ -3,6 +3,7 @@ package org.jraf.woobbankslack.woob
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import org.jraf.woobbankslack.util.Log
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -45,6 +46,7 @@ class WoobBankExecutor(private val config: Config) {
 
 
     private fun runCommand(workingDir: File, vararg command: String): String {
+        Log.d("runCommand workingDir=$workingDir command=${command.asList()}")
         val process = ProcessBuilder(command.asList())
             .directory(workingDir)
             .redirectOutput(ProcessBuilder.Redirect.PIPE)
@@ -52,7 +54,9 @@ class WoobBankExecutor(private val config: Config) {
             .start()
 
         process.waitFor(1, TimeUnit.MINUTES)
-        return process.inputStream.bufferedReader().readText().trim()
+        val res = process.inputStream.bufferedReader().readText().trim()
+        Log.d("Command executed successfully")
+        return res
     }
 
     data class Config(

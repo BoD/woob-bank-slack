@@ -1,13 +1,13 @@
 object Versions {
     // Misc and plugins
-    const val GRADLE = "7.0"
-    const val KOTLIN = "1.5.0"
-    const val BEN_MANES_VERSIONS_PLUGIN = "0.38.0"
-    const val SHADOW_PLUGIN = "6.1.0"
+    const val GRADLE = "7.1"
+    const val KOTLIN = "1.5.10"
+    const val BEN_MANES_VERSIONS_PLUGIN = "0.39.0"
+    const val SHADOW_PLUGIN = "7.0.0"
 
 
     // App dependencies
-    const val COROUTINES = "1.4.3"
+    const val COROUTINES = "1.5.0"
     const val RETROFIT = "2.9.0"
     const val MOSHI = "1.12.0"
     const val KOTLINX_CLI = "0.3.2"
