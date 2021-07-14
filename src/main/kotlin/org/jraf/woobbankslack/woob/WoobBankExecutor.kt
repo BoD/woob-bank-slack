@@ -25,7 +25,7 @@ class WoobBankExecutor(private val config: Config) {
             "-f",
             "json",
             "-n",
-            "8",
+            "16",
             "--auto-update",
         )
         return transactionJsonAdapter.fromJson(commandResult)!!.reversed()
@@ -53,7 +53,12 @@ class WoobBankExecutor(private val config: Config) {
             .redirectError(ProcessBuilder.Redirect.PIPE)
             .start()
 
-        process.waitFor(1, TimeUnit.MINUTES)
+        val success = process.waitFor(1, TimeUnit.MINUTES)
+        if (!success) {
+            process.destroyForcibly()
+            Log.w("Timeout reached while executing the command")
+            throw Exception("Timeout reached while executing the command")
+        }
         val res = process.inputStream.bufferedReader().readText().trim()
         Log.d("Command executed successfully")
         return res
