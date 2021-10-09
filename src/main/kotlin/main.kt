@@ -24,6 +24,8 @@ suspend fun main(args: Array<String>) {
     val failCount = mutableMapOf<AccountArgument, Int>()
     while (true) {
         try {
+            var text = ""
+
             var allAccounts: List<WoobBankAccount> = emptyList()
 
             Log.d("accountArguments=${arguments.accountArguments}")
@@ -37,25 +39,22 @@ suspend fun main(args: Array<String>) {
                     val failCountForAccount = failCount.getOrPut(accountArgument) { 0 } + 1
                     failCount[accountArgument] = failCountForAccount
                     if (failCountForAccount >= 8) {
-                        val postResult = slackClient.postMessage(text = """
-                            _${accountArgument.name}_
-                            :warning: Could not retrieve transactions for $failCountForAccount times. Check credentials!
-                        """.trimIndent(), channel = arguments.slackChannel)
-                        Log.d("postResult=$postResult")
+                        text += "_${accountArgument.name}_\n:warning: Could not retrieve transactions for $failCountForAccount times. Check credentials!\n\n"
                     }
                     continue
                 }
                 val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList())
                 Log.d("newTransactions.size=${newTransactions.size}")
                 Log.d("newTransactions=$newTransactions")
+
+                if (newTransactions.isNotEmpty()) {
+                    text += "_${accountArgument.name}_\n"
+                }
                 for (transaction in newTransactions) {
-                    val text = """
-                        _${accountArgument.name}_
-                        ${if (transaction.amount.startsWith('-')) "🔻" else ":small_green_triangle:"} *${transaction.amount}* - ${transaction.raw}
-                    """.trimIndent()
-                    Log.d(text)
-                    val postResult = slackClient.postMessage(text = text, channel = arguments.slackChannel)
-                    Log.d("postResult=$postResult")
+                    val transactionText =
+                        "${if (transaction.amount.startsWith('-')) "🔻" else ":small_green_triangle:"} *${transaction.amount}* - ${transaction.raw}\n"
+                    Log.d(transactionText)
+                    text += transactionText
 
                     // Sleep a bit between posts
                     TimeUnit.SECONDS.sleep(1)
@@ -70,13 +69,14 @@ suspend fun main(args: Array<String>) {
                     }
                     val accountsByBank = allAccounts.groupBy { it.id.getBankId() }
 
-                    val text = """
-                        :sum: _${accountArgument.name}_ balance: *${accountsByBank[accountArgument.id.getBankId()]!!.sumByBalance()}* 
-                    """.trimIndent()
-                    Log.d("text=$text")
-                    val postResult = slackClient.postMessage(text = text, channel = arguments.slackChannel)
-                    Log.d("postResult=$postResult")
+                    text += ":sum: _${accountArgument.name}_ balance: *${accountsByBank[accountArgument.id.getBankId()]!!.sumByBalance()}*\n\n"
                 }
+            }
+
+            Log.d("text=$text")
+            if (text.isNotEmpty()) {
+                val postResult = slackClient.postMessage(text = text, channel = arguments.slackChannel)
+                Log.d("postResult=$postResult")
             }
         } catch (t: Throwable) {
             Log.w(t, "Caught exception in main loop")
