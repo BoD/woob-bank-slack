@@ -43,7 +43,7 @@ suspend fun main(args: Array<String>) {
                     }
                     continue
                 }
-                val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList())
+                val newTransactions = transactions - (lastTransactions[accountArgument] ?: emptyList()).toSet()
                 Log.d("newTransactions.size=${newTransactions.size}")
                 Log.d("newTransactions=$newTransactions")
 
@@ -55,9 +55,6 @@ suspend fun main(args: Array<String>) {
                         "${if (transaction.amount.startsWith('-')) "🔻" else ":small_green_triangle:"} *${transaction.amount}* - ${transaction.raw}\n"
                     Log.d(transactionText)
                     text += transactionText
-
-                    // Sleep a bit between posts
-                    TimeUnit.SECONDS.sleep(1)
                 }
                 lastTransactions[accountArgument] = transactions
 
