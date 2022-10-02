@@ -1,13 +1,10 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version Versions.KOTLIN
-    kotlin("kapt") version Versions.KOTLIN
+    kotlin("jvm")
+    kotlin("kapt")
     application
-    id("com.github.johnrengelman.shadow") version Versions.SHADOW_PLUGIN
-    id("com.github.ben-manes.versions") version Versions.BEN_MANES_VERSIONS_PLUGIN
+    id("com.github.johnrengelman.shadow")
 }
 
 group = "org.jraf"
@@ -15,63 +12,27 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://kotlin.bintray.com/kotlinx") }
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8", Versions.KOTLIN))
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8", Versions.COROUTINES)
+    implementation(KotlinX.coroutines.jdk8)
 
     // Retrofit / Moshi
-    implementation("com.squareup.retrofit2", "retrofit", Versions.RETROFIT)
-    implementation("com.squareup.retrofit2", "converter-moshi", Versions.RETROFIT)
-    implementation("com.squareup.moshi", "moshi", Versions.MOSHI)
-    kapt("com.squareup.moshi", "moshi-kotlin-codegen", Versions.MOSHI)
+    implementation(Square.retrofit2)
+    implementation(Square.retrofit2.converter.moshi)
+    implementation(Square.moshi)
+    kapt(Square.moshi.kotlinCodegen)
 
-    implementation("org.jetbrains.kotlinx", "kotlinx-cli", Versions.KOTLINX_CLI)
-
-    testImplementation(kotlin("test-junit"))
-}
-
-tasks.test {
-    useJUnit()
-}
-
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+    implementation(KotlinX.cli)
 }
 
 application {
-    mainClassName = "MainKt"
+    mainClass.set("MainKt")
 }
 
 tasks {
     named<ShadowJar>("shadowJar") {
         minimize()
-    }
-
-    // Configuration for gradle-versions-plugin
-    // Run `./gradlew dependencyUpdates` to see latest versions of dependencies
-    withType<DependencyUpdatesTask> {
-        resolutionStrategy {
-            componentSelection {
-                all {
-                    if (
-                        setOf("alpha", "beta", "rc", "preview", "eap", "m1", "m2").any {
-                            candidate.version.contains(it, true)
-                        }
-                    ) {
-                        reject("Non stable")
-                    }
-                }
-            }
-        }
-    }
-
-    wrapper {
-        distributionType = Wrapper.DistributionType.ALL
-        gradleVersion = Versions.GRADLE
     }
 }
 
@@ -96,4 +57,5 @@ tasks.register<DefaultTask>("shadowJarExecutable") {
     }
 }
 
-// Run `./gradlew shadowJarExecutable` to build the "really executable jar"
+// `./gradlew refreshVersions` to update dependencies
+// `./gradlew shadowJarExecutable` to build the "really executable jar"
