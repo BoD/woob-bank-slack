@@ -5,6 +5,7 @@ plugins {
     kotlin("kapt")
     application
     id("com.github.johnrengelman.shadow")
+    id("com.bmuschko.docker-java-application")
 }
 
 group = "org.jraf"
@@ -57,5 +58,38 @@ tasks.register<DefaultTask>("shadowJarExecutable") {
     }
 }
 
+docker {
+    javaApplication {
+        maintainer.set("BoD <BoD@JRAF.org>")
+        ports.set(emptyList())
+        images.add("bodlulu/${rootProject.name}:latest")
+    }
+    registryCredentials {
+        username.set(System.getenv("DOCKER_USERNAME"))
+        password.set(System.getenv("DOCKER_PASSWORD"))
+    }
+
+}
+
+tasks.withType<com.bmuschko.gradle.docker.tasks.image.DockerBuildImage> {
+    platform.set("linux/amd64")
+}
+
+tasks.withType<com.bmuschko.gradle.docker.tasks.image.Dockerfile> {
+    // Install python
+    runCommand(
+        """apt-get update && \
+    apt-get install -y software-properties-common && \
+    apt-get install -y python3-pip"""
+    )
+    // Install woob from source
+    runCommand("apt-get install -y git")
+    runCommand("git clone https://gitlab.com/woob/woob.git --depth 1")
+    runCommand("cd woob && ./setup.py install")
+    runCommand("woob update")
+}
+
+
 // `./gradlew refreshVersions` to update dependencies
 // `./gradlew shadowJarExecutable` to build the "really executable jar"
+// `DOCKER_USERNAME=<your docker hub login> DOCKER_PASSWORD=<your docker hub password> ./gradlew dockerPushImage` to build and push the image

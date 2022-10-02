@@ -1,0 +1,9 @@
+[bank1]
+_module = bank1
+login = XXX
+password = YYY
+
+[bank2]
+_module = bank2
+login = ZZZ
+password = AAA
