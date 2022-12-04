@@ -53,7 +53,7 @@ class WoobBankExecutor(private val config: Config) {
             .redirectError(ProcessBuilder.Redirect.PIPE)
             .start()
 
-        val success = process.waitFor(1, TimeUnit.MINUTES)
+        val success = process.waitFor(6, TimeUnit.MINUTES)
         if (!success) {
             process.destroyForcibly()
             Log.w("Timeout reached while executing the command")

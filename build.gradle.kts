@@ -63,6 +63,7 @@ docker {
         maintainer.set("BoD <BoD@JRAF.org>")
         ports.set(emptyList())
         images.add("bodlulu/${rootProject.name}:latest")
+        jvmArgs.set(listOf("-Xms16m", "-Xmx128m"))
     }
     registryCredentials {
         username.set(System.getenv("DOCKER_USERNAME"))
@@ -87,6 +88,7 @@ tasks.withType<com.bmuschko.gradle.docker.tasks.image.Dockerfile> {
     runCommand("git clone https://gitlab.com/woob/woob.git --depth 1")
     runCommand("cd woob && ./setup.py install")
     runCommand("woob update")
+    environmentVariable("MALLOC_ARENA_MAX", "4")
 }
 
 
