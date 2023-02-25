@@ -1,3 +1,6 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile.FromInstruction
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
@@ -72,11 +75,19 @@ docker {
 
 }
 
-tasks.withType<com.bmuschko.gradle.docker.tasks.image.DockerBuildImage> {
+tasks.withType<DockerBuildImage> {
     platform.set("linux/amd64")
 }
 
-tasks.withType<com.bmuschko.gradle.docker.tasks.image.Dockerfile> {
+tasks.withType<Dockerfile> {
+    val originalInstructions = instructions.get().toMutableList()
+    val fromInstructionIndex = originalInstructions
+        .indexOfFirst { item -> item.keyword == FromInstruction.KEYWORD }
+    originalInstructions.removeAt(fromInstructionIndex)
+    val baseImage = FromInstruction(Dockerfile.From("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.18_10_openj9-0.36.1"))
+    originalInstructions.add(0, baseImage)
+    instructions.set(originalInstructions)
+
     // Install python
     runCommand(
         """apt-get update && \
