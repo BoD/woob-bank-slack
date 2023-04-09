@@ -31,6 +31,10 @@ suspend fun main(args: Array<String>) {
             Log.d("accountArguments=${arguments.accountArguments}")
             for (accountArgument in arguments.accountArguments) {
                 Log.d("accountArgument=$accountArgument")
+
+                // TODO remove this workaround once https://gitlab.com/woob/woob/-/issues/614 is fixed
+                woobBankExecutor.axabanqueWorkaround()
+
                 val transactions = woobBankExecutor.getTransactions(accountArgument.id)
                 Log.d("transactions.size=${transactions.size}")
                 Log.d("transactions=$transactions")

@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile.FromInstruction
 
 plugins {
     kotlin("jvm")
@@ -34,6 +33,8 @@ application {
 
 docker {
     javaApplication {
+        // Use OpenJ9 instead of the default one
+        baseImage.set("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.18_10_openj9-0.36.1")
         maintainer.set("BoD <BoD@JRAF.org>")
         ports.set(emptyList())
         images.add("bodlulu/${rootProject.name}:latest")
@@ -51,17 +52,6 @@ tasks.withType<DockerBuildImage> {
 }
 
 tasks.withType<Dockerfile> {
-    // Use OpenJ9 instead of the default one
-    instructions.set(
-        instructions.get().map { item ->
-            if (item.keyword == FromInstruction.KEYWORD) {
-                FromInstruction(Dockerfile.From("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.18_10_openj9-0.36.1"))
-            } else {
-                item
-            }
-        }
-    )
-
     // Install python
     runCommand(
         """
@@ -75,9 +65,7 @@ tasks.withType<Dockerfile> {
     runCommand("git clone https://gitlab.com/woob/woob.git --depth 1")
     runCommand("cd woob && pip install .")
     runCommand("woob update")
-    environmentVariable("MALLOC_ARENA_MAX", "4")
 }
-
 
 // `./gradlew refreshVersions` to update dependencies
 // `DOCKER_USERNAME=<your docker hub login> DOCKER_PASSWORD=<your docker hub password> ./gradlew dockerPushImage` to build and push the image

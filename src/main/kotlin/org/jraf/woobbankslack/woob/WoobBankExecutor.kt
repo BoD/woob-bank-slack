@@ -44,6 +44,16 @@ class WoobBankExecutor(private val config: Config) {
         return accountJsonAdapter.fromJson(commandResult)!!
     }
 
+    fun axabanqueWorkaround() {
+        runCommand(
+            workingDir = File(config.woobDirectory),
+            config.woobDirectory + "/" + "woob",
+            "bank",
+            "storage",
+            "flush",
+            "axabanque",
+        )
+    }
 
     private fun runCommand(workingDir: File, vararg command: String): String {
         Log.d("runCommand workingDir=$workingDir command=${command.asList()}")
