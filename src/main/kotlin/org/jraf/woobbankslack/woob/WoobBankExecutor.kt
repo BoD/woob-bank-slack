@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit
 private val LOGGER = LoggerFactory.getLogger(WoobBankExecutor::class.java)
 
 class WoobBankExecutor(private val config: Config) {
+    private val json by lazy { Json { ignoreUnknownKeys = true } }
+
     fun getTransactions(accountId: String): List<JsonWoobBankTransaction> {
         val commandResult = runCommand(
             workingDir = File(config.woobDirectory),
@@ -51,7 +53,7 @@ class WoobBankExecutor(private val config: Config) {
             "16",
             "--auto-update",
         )
-        return Json.decodeFromString<List<JsonWoobBankTransaction>>(commandResult).reversed()
+        return json.decodeFromString<List<JsonWoobBankTransaction>>(commandResult).reversed()
     }
 
     fun getAccounts(): List<JsonWoobBankAccount> {
@@ -64,7 +66,7 @@ class WoobBankExecutor(private val config: Config) {
             "json",
             "--auto-update",
         )
-        return Json.decodeFromString<List<JsonWoobBankAccount>>(commandResult)
+        return json.decodeFromString<List<JsonWoobBankAccount>>(commandResult)
     }
 
     fun axabanqueWorkaround() {

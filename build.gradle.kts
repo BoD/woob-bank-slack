@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile.CopyFileInstruction
 
 plugins {
     kotlin("jvm")
@@ -68,6 +69,14 @@ tasks.withType<Dockerfile> {
     runCommand("git clone https://gitlab.com/woob/woob.git --depth 1")
     runCommand("cd woob && pip install .")
     runCommand("woob update")
+
+    // Move the COPY instructions to the end
+    // See https://github.com/bmuschko/gradle-docker-plugin/issues/1093
+    instructions.set(
+        instructions.get().sortedBy { instruction ->
+            if (instruction.keyword == CopyFileInstruction.KEYWORD) 1 else 0
+        }
+    )
 }
 
 // `./gradlew refreshVersions` to update dependencies
