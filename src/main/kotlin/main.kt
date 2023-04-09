@@ -1,14 +1,13 @@
+import org.jraf.klibslack.client.SlackClient
+import org.jraf.klibslack.client.configuration.ClientConfiguration
 import org.jraf.woobbankslack.arguments.AccountArgument
 import org.jraf.woobbankslack.arguments.Arguments
-import org.jraf.woobbankslack.slack.AuthTokenProvider
-import org.jraf.woobbankslack.slack.SlackClient
 import org.jraf.woobbankslack.util.Log
 import org.jraf.woobbankslack.woob.WoobBankAccount
 import org.jraf.woobbankslack.woob.WoobBankExecutor
 import org.jraf.woobbankslack.woob.WoobBankTransaction
 import java.util.concurrent.TimeUnit
 
-@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun main(args: Array<String>) {
     println("Hello World!")
     val arguments = Arguments(args)
@@ -16,9 +15,7 @@ suspend fun main(args: Array<String>) {
     val woobBankConfig = WoobBankExecutor.Config(woobDirectory = arguments.woobDirectory)
     val woobBankExecutor = WoobBankExecutor(woobBankConfig)
 
-    val slackClient = SlackClient(object : AuthTokenProvider {
-        override fun getAuthToken() = arguments.slackAuthToken
-    })
+    val slackClient = SlackClient.newInstance(ClientConfiguration("", arguments.slackAuthToken))
 
     val lastTransactions = mutableMapOf<AccountArgument, List<WoobBankTransaction>>()
     val failCount = mutableMapOf<AccountArgument, Int>()
@@ -76,8 +73,7 @@ suspend fun main(args: Array<String>) {
 
             Log.d("text=$text")
             if (text.isNotEmpty()) {
-                val postResult = slackClient.postMessage(text = text, channel = arguments.slackChannel)
-                Log.d("postResult=$postResult")
+                slackClient.chatPostMessage(text = text, channel = arguments.slackChannel)
             }
         } catch (t: Throwable) {
             Log.w(t, "Caught exception in main loop")

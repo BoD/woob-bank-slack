@@ -12,6 +12,7 @@ group = "org.jraf"
 version = "1.0.0"
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -23,6 +24,9 @@ dependencies {
     implementation(Square.retrofit2.converter.moshi)
     implementation(Square.moshi)
     kapt(Square.moshi.kotlinCodegen)
+
+    // Slack
+    implementation("org.jraf.klibslack", "klibslack", "_")
 
     implementation(KotlinX.cli)
 }
