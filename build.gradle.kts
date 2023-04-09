@@ -3,7 +3,7 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
 plugins {
     kotlin("jvm")
-    kotlin("kapt")
+    kotlin("plugin.serialization")
     application
     id("com.bmuschko.docker-java-application")
 }
@@ -17,13 +17,12 @@ repositories {
 }
 
 dependencies {
-    implementation(KotlinX.coroutines.jdk8)
+    implementation("org.slf4j", "slf4j-simple", "_")
 
-    // Retrofit / Moshi
-    implementation(Square.retrofit2)
-    implementation(Square.retrofit2.converter.moshi)
-    implementation(Square.moshi)
-    kapt(Square.moshi.kotlinCodegen)
+    implementation(KotlinX.coroutines.jdk9)
+
+    // Serialization
+    implementation(KotlinX.serialization.json)
 
     // Slack
     implementation("org.jraf.klibslack", "klibslack", "_")
